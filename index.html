@@ -1,17 +1,117 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Player</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>jump test</title>
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      font-family: sans-serif;
+    }
+    .sidebar {
+      width: 200px;
+      background-color: #66e5ff;
+      display: flex;
+      flex-direction: column;
+      padding: 10px;
+    }
+    .tab {
+      padding: 10px;
+      margin-bottom: 5px;
+      background-color: #ffffff66;
+      cursor: pointer;
+      border-radius: 5px;
+      text-align: center;
+      transition: background-color 0.2s;
+    }
+    .tab:hover {
+      background-color: #ffffffaa;
+    }
+    .tab.active {
+      background-color: white;
+      font-weight: bold;
+    }
+    .content {
+      flex-grow: 1;
+      padding: 20px;
+    }
+    video {
+      max-width: 100%;
+      height: auto;
+    }
+  </style>
 </head>
 <body>
-    <h1>My Video Player</h1>
 
-    <video width="640" height="360" preload="auto" autoplay muted loop>
-        <source src="video.webm" type="video/webm">
-        Your browser does not support the video tag.
+  <div class="sidebar" id="tabs"></div>
+
+  <div class="content">
+    <h1 id="videoTitle">jump test</h1>
+    <video id="videoPlayer" width="640" height="360" preload="auto" autoplay muted loop controls>
+      <source src="video.webm" type="video/webm">
+      Your browser does not support the video tag.
     </video>
+  </div>
+
+  <script>
+    // 🔧 Your video files list here (filename + optional custom tab name)
+    const videos = [
+      { file: "video.webm", label: "jump test" }, // first tab custom
+      { file: "trailer.mp4" },
+      { file: "demo.ogg" }
+    ];
+
+    const tabsContainer = document.getElementById("tabs");
+    const videoTitle = document.getElementById("videoTitle");
+    const videoPlayer = document.getElementById("videoPlayer");
+
+    function getNameWithoutExtension(filename) {
+      return filename.replace(/\.[^/.]+$/, "");
+    }
+
+    function getMimeType(filename) {
+      const ext = filename.split('.').pop().toLowerCase();
+      return {
+        mp4: 'video/mp4',
+        webm: 'video/webm',
+        ogg: 'video/ogg'
+      }[ext] || 'video/mp4';
+    }
+
+    function loadVideo(fileName, label) {
+      videoTitle.textContent = label;
+      document.title = label;
+
+      const source = document.createElement("source");
+      source.src = fileName;
+      source.type = getMimeType(fileName);
+
+      videoPlayer.innerHTML = ""; // clear existing
+      videoPlayer.appendChild(source);
+      videoPlayer.load();
+      videoPlayer.play();
+    }
+
+    videos.forEach((videoObj, index) => {
+      const { file, label } = videoObj;
+      const tab = document.createElement("div");
+      const displayLabel = label || getNameWithoutExtension(file);
+      tab.className = "tab";
+      tab.textContent = displayLabel;
+      tab.onclick = () => {
+        document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+        tab.classList.add("active");
+        loadVideo(file, displayLabel);
+      };
+      if (index === 0) tab.classList.add("active");
+      tabsContainer.appendChild(tab);
+    });
+
+    // Load the first video
+    loadVideo(videos[0].file, videos[0].label || getNameWithoutExtension(videos[0].file));
+  </script>
 
 </body>
 </html>
