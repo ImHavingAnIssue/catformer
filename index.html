@@ -5,41 +5,81 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>jump test</title>
   <style>
-    body {
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
       margin: 0;
-      display: flex;
+      height: 100%;
       font-family: sans-serif;
     }
+
+    body {
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
     .sidebar {
-      width: 200px;
+      width: 260px;
       background-color: #66e5ff;
       display: flex;
       flex-direction: column;
-      padding: 10px;
+      padding: 20px;
+      overflow-y: auto;
     }
+
     .tab {
-      padding: 10px;
-      margin-bottom: 5px;
+      display: flex;
+      align-items: center;
+      padding: 12px;
+      margin-bottom: 10px;
       background-color: #ffffff66;
       cursor: pointer;
-      border-radius: 5px;
-      text-align: center;
+      border-radius: 6px;
       transition: background-color 0.2s;
+      gap: 12px;
+      font-size: 1.1rem;
     }
+
     .tab:hover {
       background-color: #ffffffaa;
     }
+
     .tab.active {
       background-color: white;
       font-weight: bold;
     }
+
+    .tab img {
+      width: 50px;
+      height: 50px;
+      object-fit: cover;
+      border-radius: 4px;
+    }
+
     .content {
       flex-grow: 1;
-      padding: 20px;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background-color: #f2f2f2;
     }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 20px;
+    }
+
     video {
+      width: 960px;
+      height: 540px;
       max-width: 100%;
-      height: auto;
+      border-radius: 8px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.2);
     }
   </style>
 </head>
@@ -49,16 +89,15 @@
 
   <div class="content">
     <h1 id="videoTitle">jump test</h1>
-    <video id="videoPlayer" width="640" height="360" preload="auto" autoplay muted loop controls>
+    <video id="videoPlayer" preload="auto" autoplay muted loop controls>
       <source src="video.webm" type="video/webm">
       Your browser does not support the video tag.
     </video>
   </div>
 
   <script>
-    // 🔧 Your video files list here (filename + optional custom tab name)
     const videos = [
-      { file: "video.webm", label: "jump test" }, // first tab custom
+      { file: "video.webm", label: "jump test" },
       { file: "trailer.mp4" },
       { file: "demo.ogg" }
     ];
@@ -91,26 +130,47 @@
       videoPlayer.innerHTML = ""; // clear existing
       videoPlayer.appendChild(source);
       videoPlayer.load();
-      videoPlayer.play();
+      videoPlayer.play().catch(e => {
+        // Video may not load (e.g. doesn't exist)
+        videoTitle.textContent = label + " (video not found)";
+      });
     }
 
     videos.forEach((videoObj, index) => {
       const { file, label } = videoObj;
+      const name = getNameWithoutExtension(file);
+      const displayLabel = label || name;
+      const thumbnailPath = `${name}.jpg`;
+
       const tab = document.createElement("div");
-      const displayLabel = label || getNameWithoutExtension(file);
       tab.className = "tab";
-      tab.textContent = displayLabel;
+
+      const img = document.createElement("img");
+      img.src = thumbnailPath;
+      img.alt = displayLabel;
+      img.onerror = () => {
+        img.src = "https://via.placeholder.com/50?text=📄";
+      };
+
+      const text = document.createElement("span");
+      text.textContent = displayLabel;
+
+      tab.appendChild(img);
+      tab.appendChild(text);
+
       tab.onclick = () => {
         document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
         tab.classList.add("active");
         loadVideo(file, displayLabel);
       };
+
       if (index === 0) tab.classList.add("active");
       tabsContainer.appendChild(tab);
     });
 
     // Load the first video
-    loadVideo(videos[0].file, videos[0].label || getNameWithoutExtension(videos[0].file));
+    const first = videos[0];
+    loadVideo(first.file, first.label || getNameWithoutExtension(first.file));
   </script>
 
 </body>
