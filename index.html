@@ -1,128 +1,49 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>jump test</title>
-  <style>
-    * {
-      box-sizing: border-box;
-    }
+<script>
+  const videos = [
+    { file: "video.webm", label: "jump test" },
+    { file: "trailer.mp4" },
+    { file: "demo.ogg", embed: "https://studio.penguinmod.com/?offscreen&limitless&size=640x360#5706358658" }
+  ];
 
-    html, body {
-      margin: 0;
-      height: 100%;
-      font-family: sans-serif;
-    }
+  const tabsContainer = document.getElementById("tabs");
+  const videoTitle = document.getElementById("videoTitle");
+  const videoPlayer = document.getElementById("videoPlayer");
 
-    body {
-      display: flex;
-      height: 100vh;
-      overflow: hidden;
-    }
+  // We'll insert iframe here dynamically if needed
+  const videoContainer = videoPlayer.parentElement;
 
-    .sidebar {
-      width: 260px;
-      background-color: #66e5ff;
-      display: flex;
-      flex-direction: column;
-      padding: 20px;
-      overflow-y: auto;
-    }
+  function getNameWithoutExtension(filename) {
+    return filename.replace(/\.[^/.]+$/, "");
+  }
 
-    .tab {
-      display: flex;
-      align-items: center;
-      padding: 12px;
-      margin-bottom: 10px;
-      background-color: #ffffff66;
-      cursor: pointer;
-      border-radius: 6px;
-      transition: background-color 0.2s;
-      gap: 12px;
-      font-size: 1.1rem;
-    }
+  function getMimeType(filename) {
+    const ext = filename.split('.').pop().toLowerCase();
+    return {
+      mp4: 'video/mp4',
+      webm: 'video/webm',
+      ogg: 'video/ogg'
+    }[ext] || 'video/mp4';
+  }
 
-    .tab:hover {
-      background-color: #ffffffaa;
-    }
+  function loadVideo(fileName, label, embedUrl) {
+    videoTitle.textContent = label;
+    document.title = label;
 
-    .tab.active {
-      background-color: white;
-      font-weight: bold;
-    }
+    // Remove any existing iframe
+    const oldIframe = videoContainer.querySelector("iframe");
+    if (oldIframe) oldIframe.remove();
 
-    .tab img {
-      width: 50px;
-      height: 50px;
-      object-fit: cover;
-      border-radius: 4px;
-    }
-
-    .content {
-      flex-grow: 1;
-      padding: 40px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      background-color: #f2f2f2;
-    }
-
-    h1 {
-      font-size: 2rem;
-      margin-bottom: 20px;
-    }
-
-    video {
-      width: 960px;
-      height: 540px;
-      max-width: 100%;
-      border-radius: 8px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.2);
-    }
-  </style>
-</head>
-<body>
-
-  <div class="sidebar" id="tabs"></div>
-
-  <div class="content">
-    <h1 id="videoTitle">jump test</h1>
-    <video id="videoPlayer" preload="auto" autoplay muted loop controls>
-      <source src="video.webm" type="video/webm">
-      Your browser does not support the video tag.
-    </video>
-  </div>
-
-  <script>
-    const videos = [
-      { file: "video.webm", label: "jump test" },
-      { file: "trailer.mp4" },
-      { file: "demo.ogg" }
-    ];
-
-    const tabsContainer = document.getElementById("tabs");
-    const videoTitle = document.getElementById("videoTitle");
-    const videoPlayer = document.getElementById("videoPlayer");
-
-    function getNameWithoutExtension(filename) {
-      return filename.replace(/\.[^/.]+$/, "");
-    }
-
-    function getMimeType(filename) {
-      const ext = filename.split('.').pop().toLowerCase();
-      return {
-        mp4: 'video/mp4',
-        webm: 'video/webm',
-        ogg: 'video/ogg'
-      }[ext] || 'video/mp4';
-    }
-
-    function loadVideo(fileName, label) {
-      videoTitle.textContent = label;
-      document.title = label;
-
+    if (embedUrl) {
+      videoPlayer.style.display = "none";
+      const iframe = document.createElement("iframe");
+      iframe.src = embedUrl;
+      iframe.width = "960";
+      iframe.height = "540";
+      iframe.frameBorder = "0";
+      iframe.allowFullscreen = true;
+      videoContainer.appendChild(iframe);
+    } else {
+      videoPlayer.style.display = "block";
       const source = document.createElement("source");
       source.src = fileName;
       source.type = getMimeType(fileName);
@@ -130,48 +51,46 @@
       videoPlayer.innerHTML = ""; // clear existing
       videoPlayer.appendChild(source);
       videoPlayer.load();
-      videoPlayer.play().catch(e => {
-        // Video may not load (e.g. doesn't exist)
+      videoPlayer.play().catch(() => {
         videoTitle.textContent = label + " (video not found)";
       });
     }
+  }
 
-    videos.forEach((videoObj, index) => {
-      const { file, label } = videoObj;
-      const name = getNameWithoutExtension(file);
-      const displayLabel = label || name;
-      const thumbnailPath = `${name}.jpg`;
+  videos.forEach((videoObj, index) => {
+    const { file, label, embed } = videoObj;
+    const name = getNameWithoutExtension(file);
+    const displayLabel = label || name;
+    const thumbnailPath = `${name}.jpg`;
 
-      const tab = document.createElement("div");
-      tab.className = "tab";
+    const tab = document.createElement("div");
+    tab.className = "tab";
 
-      const img = document.createElement("img");
-      img.src = thumbnailPath;
-      img.alt = displayLabel;
-      img.onerror = () => {
-        img.src = "https://via.placeholder.com/50?text=📄";
-      };
+    const img = document.createElement("img");
+    img.src = thumbnailPath;
+    img.alt = displayLabel;
+    img.onerror = () => {
+      img.onerror = null;
+      img.src = "https://via.placeholder.com/50?text=📄";
+    };
 
-      const text = document.createElement("span");
-      text.textContent = displayLabel;
+    const text = document.createElement("span");
+    text.textContent = displayLabel;
 
-      tab.appendChild(img);
-      tab.appendChild(text);
+    tab.appendChild(img);
+    tab.appendChild(text);
 
-      tab.onclick = () => {
-        document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-        tab.classList.add("active");
-        loadVideo(file, displayLabel);
-      };
+    tab.onclick = () => {
+      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+      tab.classList.add("active");
+      loadVideo(file, displayLabel, embed);
+    };
 
-      if (index === 0) tab.classList.add("active");
-      tabsContainer.appendChild(tab);
-    });
+    if (index === 0) tab.classList.add("active");
+    tabsContainer.appendChild(tab);
+  });
 
-    // Load the first video
-    const first = videos[0];
-    loadVideo(first.file, first.label || getNameWithoutExtension(first.file));
-  </script>
-
-</body>
-</html>
+  // Load the first video
+  const first = videos[0];
+  loadVideo(first.file, first.label || getNameWithoutExtension(first.file), first.embed);
+</script>
