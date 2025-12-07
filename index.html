@@ -3,6 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <title>Video Tabs</title>
+
+  <!-- VIDEO.JS -->
+  <link href="https://vjs.zencdn.net/8.23.4/video-js.css" rel="stylesheet" />
+
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -59,25 +63,45 @@
     }
   </style>
 </head>
+
 <body>
 
   <div id="tabs"></div>
   <h2 id="videoTitle">Loading...</h2>
+
   <div id="videoContainer">
-    <video id="videoPlayer" controls></video>
+    <!-- VIDEO.JS PLAYER -->
+    <video
+      id="videoPlayer"
+      class="video-js vjs-default-skin"
+      controls
+      preload="auto"
+      width="960"
+      height="540"
+      poster="MY_VIDEO_POSTER.jpg"
+      data-setup="{}"
+    >
+      <!-- sources will be dynamically injected -->
+    </video>
   </div>
+
+  <!-- VIDEO.JS SCRIPT -->
+  <script src="https://vjs.zencdn.net/8.23.4/video.min.js"></script>
 
   <script>
     const videos = [
       { file: "video.webm", label: "jump test" },
       { file: "trailer.mp4" },
-      { file: "demo.ogg", embed: "https://studio.penguinmod.com/?offscreen&limitless&size=640x360#5706358658" }
+      {
+        file: "demo.ogg",
+        embed: "https://studio.penguinmod.com/?offscreen&limitless&size=640x360#5706358658"
+      }
     ];
 
     const tabsContainer = document.getElementById("tabs");
     const videoTitle = document.getElementById("videoTitle");
-    const videoPlayer = document.getElementById("videoPlayer");
     const videoContainer = document.getElementById("videoContainer");
+    const videoJsPlayer = videojs("videoPlayer");
 
     function getNameWithoutExtension(filename) {
       return filename.replace(/\.[^/.]+$/, "");
@@ -86,10 +110,10 @@
     function getMimeType(filename) {
       const ext = filename.split('.').pop().toLowerCase();
       return {
-        mp4: 'video/mp4',
-        webm: 'video/webm',
-        ogg: 'video/ogg'
-      }[ext] || 'video/mp4';
+        mp4: "video/mp4",
+        webm: "video/webm",
+        ogg: "video/ogg"
+      }[ext] || "video/mp4";
     }
 
     function loadVideo(fileName, label, embedUrl) {
@@ -100,23 +124,28 @@
       if (oldIframe) oldIframe.remove();
 
       if (embedUrl) {
-        videoPlayer.style.display = "none";
+        videoJsPlayer.pause();
+        videoJsPlayer.reset();
+        videoJsPlayer.hide();
+
         const iframe = document.createElement("iframe");
         iframe.src = embedUrl;
         iframe.width = "960";
         iframe.height = "540";
-        iframe.frameBorder = "0";
         iframe.allowFullscreen = true;
+        iframe.frameBorder = "0";
         videoContainer.appendChild(iframe);
       } else {
-        videoPlayer.style.display = "block";
-        videoPlayer.innerHTML = ""; // clear existing
-        const source = document.createElement("source");
-        source.src = fileName;
-        source.type = getMimeType(fileName);
-        videoPlayer.appendChild(source);
-        videoPlayer.load();
-        videoPlayer.play().catch(() => {
+        const iframe = videoContainer.querySelector("iframe");
+        if (iframe) iframe.remove();
+
+        videoJsPlayer.show();
+        videoJsPlayer.src({
+          src: fileName,
+          type: getMimeType(fileName)
+        });
+
+        videoJsPlayer.play().catch(() => {
           videoTitle.textContent = label + " (video not found)";
         });
       }
@@ -126,13 +155,13 @@
       const { file, label, embed } = videoObj;
       const name = getNameWithoutExtension(file);
       const displayLabel = label || name;
-      const thumbnailPath = `${name}.jpg`;
+      const thumb = `${name}.jpg`;
 
       const tab = document.createElement("div");
       tab.className = "tab";
 
       const img = document.createElement("img");
-      img.src = thumbnailPath;
+      img.src = thumb;
       img.alt = displayLabel;
       img.onerror = () => {
         img.onerror = null;
